@@ -147,8 +147,12 @@ const waitForPaused = Task.async(function* (dbg) {
 });
 
 function waitForSources(dbg, ...sources) {
+  if(!sources.length) {
+    return Promise.resolve();
+  }
+
   info("Waiting on sources: " + sources.join(", "));
-  yield Promise.all(sources.map(url => {
+  return Promise.all(sources.map(url => {
     function sourceExists(state) {
       return dbg.selectors.getSources(state).some(s => s.get("url").includes(url));
     }
@@ -175,10 +179,7 @@ const initDebugger = Task.async(function* (url, ...sources) {
     win: win
   };
 
-  if(sources.length) {
-    yield waitForSources(dbg, ...sources);
-  }
-
+  yield waitForSources(dbg, ...sources);
   return dbg;
 });
 
