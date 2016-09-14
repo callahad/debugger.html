@@ -43,6 +43,7 @@
     "waitForThreadEvents": false,
     "waitForState": false,
     "waitForPaused": false,
+    "waitForSources": false,
     "isPaused": false,
     "assertPausedLocation": false,
     "initDebugger": false,
@@ -61,6 +62,7 @@
     "toggleCallStack": false,
     "isVisibleWithin": false,
     "clickElement": false,
-    "togglePauseOnExceptions": false
+    "togglePauseOnExceptions": false,
+    "EXAMPLE_URL": false
   }
 }
