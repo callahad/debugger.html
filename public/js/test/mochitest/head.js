@@ -146,6 +146,19 @@ const waitForPaused = Task.async(function* (dbg) {
   ]);
 });
 
+function waitForSources(dbg, ...sources) {
+  info("Waiting on sources: " + sources.join(", "));
+  yield Promise.all(sources.map(url => {
+    function sourceExists(state) {
+      return dbg.selectors.getSources(state).some(s => s.get("url").includes(url));
+    }
+
+    if(!sourceExists(dbg.store.getState())) {
+      return waitForState(dbg, sourceExists);
+    }
+  }));
+}
+
 const initDebugger = Task.async(function* (url, ...sources) {
   const toolbox = yield openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
   const win = toolbox.getPanel("jsdebugger").panelWin;
@@ -163,17 +176,7 @@ const initDebugger = Task.async(function* (url, ...sources) {
   };
 
   if(sources.length) {
-    // TODO: Extract this out to a utility function
-    info("Waiting on sources: " + sources.join(", "));
-    yield Promise.all(sources.map(url => {
-      function sourceExists(state) {
-        return getSources(state).some(s => s.get("url").includes(url));
-      }
-
-      if(!sourceExists(store.getState())) {
-        return waitForState(dbg, sourceExists);
-      }
-    }));
+    yield waitForSources(dbg, ...sources);
   }
 
   return dbg;
@@ -201,11 +204,10 @@ function findSource(dbg, url) {
 function selectSource(dbg, url, line) {
   info("Selecting source: " + url);
   const source = findSource(dbg, url);
-  const prevSelectedSource = dbg.selectors.getSelectedSource(dbg.getState());
+  const hasText = !!dbg.selectors.getSourceText(dbg.getState(), source.id);
   dbg.actions.selectSource(source.id, { line });
 
-  if(!prevSelectedSource ||
-     prevSelectedSource.get("id") !== source.id) {
+  if(!hasText) {
     return waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
   }
 }
